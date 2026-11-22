@@ -44,3 +44,6 @@ Pano **Yapılacak**, **Devam Ediyor** ve **Tamamlandı** olmak üzere üç sütu
     - **Toplam Gelir:** `20000.00 TL`
     - **Toplam Gider:** `5000.00 TL`
     - **Mevcut Bakiye:** `15000.00 TL`
+### Özellik 3: İşlem Türüne Göre Filtreleme
+1. Gelir ve gider kayıtları eklendikten sonra **İşlem Geçmişi** başlığının sağındaki **Sadece Gelirler** butonuna basın; tabloda yalnızca gelir kayıtlarının listelendiğini doğrulayın.
+2. **Sadece Giderler** butonuna basarak yalnızca giderlerin listelendiğini, **Tümü** butonuna basarak tüm kayıtların geri geldiğini doğrulayın.
