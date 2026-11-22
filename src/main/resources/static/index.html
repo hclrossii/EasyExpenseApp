@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EasyExpense – Kişisel Finans Takibi</title>
+    <style>
+        :root {
+            --bg-color: #f4f6f9;
+            --card-bg: #ffffff;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --income: #10b981;
+            --income-bg: #d1fae5;
+            --expense: #ef4444;
+            --expense-bg: #fee2e2;
+            --primary: #3b82f6;
+            --primary-hover: #2563eb;
+            --border: #e2e8f0;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            padding: 2rem 1rem;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        header h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+
+        header p {
+            color: var(--text-muted);
+            margin-top: 0.25rem;
+        }
+
+        /* Özet Kartları */
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.25rem;
+            margin-bottom: 2rem;
+        }
+
+        .card {
+            background: var(--card-bg);
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+            border: 1px solid var(--border);
+        }
+
+        .summary-card h3 {
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+        }
+
+        .summary-card .amount {
+            font-size: 1.75rem;
+            font-weight: 700;
+        }
+
+        .text-income { color: var(--income); }
+        .text-expense { color: var(--expense); }
+        .text-balance { color: var(--primary); }
+
+        /* Form Alanı */
+        .form-card {
+            margin-bottom: 2rem;
+        }
+
+        .form-card h2, .list-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1.25rem;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 2fr auto;
+            gap: 1rem;
+            align-items: end;
+        }
+
+        @media (max-width: 768px) {
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.4rem;
+        }
+
+        label {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--text-main);
+        }
+
+        input, select {
+            padding: 0.65rem 0.85rem;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 0.95rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        input:focus, select:focus {
+            border-color: var(--primary);
+        }
+
+        button {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 0.7rem 1.5rem;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        button:hover {
+            background-color: var(--primary-hover);
+        }
+
+        .error-msg {
+            color: var(--expense);
+            font-size: 0.875rem;
+            margin-top: 0.75rem;
+            display: none;
+        }
+
+        /* İşlem Tablosu */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            text-align: left;
+            padding: 0.9rem 1rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        th {
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            background-color: #f8fafc;
+        }
+
+        .badge {
+            padding: 0.25rem 0.65rem;
+            border-radius: 999px;
+            font-size: 0.75rem;
+            font-weight: 700;
+        }
+
+        .badge-income {
+            background-color: var(--income-bg);
+            color: var(--income);
+        }
+
+        .badge-expense {
+            background-color: var(--expense-bg);
+            color: var(--expense);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 2rem;
+            color: var(--text-muted);
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>EasyExpense</h1>
+        <p>Kişisel Gelir ve Gider Takip Uygulaması</p>
+    </header>
+
+    <!-- Bakiye Özet Kartları -->
+    <div class="summary-grid">
+        <div class="card summary-card">
+            <h3>Toplam Gelir</h3>
+            <div class="amount text-income" id="totalIncome">0.00 TL</div>
+        </div>
+        <div class="card summary-card">
+            <h3>Toplam Gider</h3>
+            <div class="amount text-expense" id="totalExpense">0.00 TL</div>
+        </div>
+        <div class="card summary-card">
+            <h3>Mevcut Bakiye</h3>
+            <div class="amount text-balance" id="balance">0.00 TL</div>
+        </div>
+    </div>
+
+    <!-- Yeni İşlem Ekleme Formu -->
+    <div class="card form-card">
+        <h2>Yeni İşlem Ekle</h2>
+        <form id="transactionForm">
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="type">İşlem Türü</label>
+                    <select id="type" required>
+                        <option value="INCOME">Gelir (Income)</option>
+                        <option value="EXPENSE">Gider (Expense)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="amount">Tutar (TL)</label>
+                    <input type="number" id="amount" step="0.01" min="0.01" placeholder="Örn: 15000" required>
+                </div>
+                <div class="form-group">
+                    <label for="description">Açıklama</label>
+                    <input type="text" id="description" placeholder="Örn: Maaş, Kira, Market..." required>
+                </div>
+                <button type="submit">Ekle</button>
+            </div>
+            <div class="error-msg" id="errorMsg"></div>
+        </form>
+    </div>
+
+    <!-- İşlem Geçmişi Tablosu -->
+    <div class="card list-card">
+        <h2>İşlem Geçmişi</h2>
+        <table>
+            <thead>
+            <tr>
+                <th>Tarih</th>
+                <th>Tür</th>
+                <th>Açıklama</th>
+                <th>Tutar</th>
+            </tr>
+            </thead>
+            <tbody id="transactionTableBody">
+            <tr>
+                <td colspan="4" class="empty-state">Henüz işlem bulunmuyor.</td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    const API_URL = '/api/transactions';
+
+    // Sayfa yüklendiğinde verileri getir
+    document.addEventListener('DOMContentLoaded', () => {
+        fetchData();
+    });
+
+    // Form gönderildiğinde yeni işlem ekle
+    document.getElementById('transactionForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const errorMsg = document.getElementById('errorMsg');
+        errorMsg.style.display = 'none';
+
+        const payload = {
+            type: document.getElementById('type').value,
+            amount: parseFloat(document.getElementById('amount').value),
+            description: document.getElementById('description').value.trim()
+        };
+
+        try {
+            const response = await fetch(API_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            if (!response.ok) {
+                throw new Error('İşlem eklenemedi. Lütfen tutar ve açıklama alanlarını kontrol edin.');
+            }
+
+            // Formu temizle ve tabloyu güncelle
+            document.getElementById('amount').value = '';
+            document.getElementById('description').value = '';
+            await fetchData();
+
+        } catch (err) {
+            errorMsg.textContent = err.message;
+            errorMsg.style.display = 'block';
+        }
+    });
+
+    // Bakiye ve işlem listesini sunucudan çek
+    async function fetchData() {
+        try {
+            const [balanceRes, listRes] = await Promise.all([
+                fetch(`${API_URL}/balance`),
+                fetch(API_URL)
+            ]);
+
+            const balanceData = await balanceRes.json();
+            const transactions = await listRes.json();
+
+            updateSummary(balanceData);
+            updateTable(transactions);
+        } catch (err) {
+            console.error('Veri çekme hatası:', err);
+        }
+    }
+
+    function updateSummary(data) {
+        document.getElementById('totalIncome').textContent = `${data.totalIncome.toFixed(2)} TL`;
+        document.getElementById('totalExpense').textContent = `${data.totalExpense.toFixed(2)} TL`;
+        document.getElementById('balance').textContent = `${data.balance.toFixed(2)} TL`;
+    }
+
+    function updateTable(transactions) {
+        const tbody = document.getElementById('transactionTableBody');
+
+        if (!transactions || transactions.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="4" class="empty-state">Henüz işlem bulunmuyor.</td></tr>';
+            return;
+        }
+
+        // En son eklenen en üstte görünecek şekilde sırala
+        tbody.innerHTML = transactions.slice().reverse().map(t => {
+            const isIncome = t.type === 'INCOME';
+            const badgeClass = isIncome ? 'badge-income' : 'badge-expense';
+            const badgeText = isIncome ? 'GELİR' : 'GİDER';
+            const sign = isIncome ? '+' : '-';
+            const dateStr = t.date ? new Date(t.date).toLocaleString('tr-TR', {
+                day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit'
+            }) : '-';
+
+            return `
+                <tr>
+                    <td>${dateStr}</td>
+                    <td><span class="badge ${badgeClass}">${badgeText}</span></td>
+                    <td>${escapeHtml(t.description)}</td>
+                    <td class="${isIncome ? 'text-income' : 'text-expense'}" style="font-weight: 600;">
+                        ${sign}${t.amount.toFixed(2)} TL
+                    </td>
+                </tr>
+            `;
+        }).join('');
+    }
+
+    // XSS koruması için basit metin temizleyici
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+</script>
+
+</body>
+</html>
